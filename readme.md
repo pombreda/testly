@@ -1,6 +1,6 @@
 # Tester
 
-Tester is a tool for testing command line programs that read from `stdin` and write to `stdout`. It only tests the external behaviour of the program, not that of any internal functions, so it is only really suited to very simple programs, to quickly verify that they behave as intended.
+Tester is a tool for testing command line programs that read from `stdin` and write to `stdout`. It only tests the external behaviour of the program, not that of any internal functions, so it is only really suited to very simple programs, to quickly verify that they behave as intended, however this does mean that it is language agnostic.
 
 Test cases are defined in a JSON file called `tests.json`, in the same directory as your program executable. You must run the Tester script from this directory, but you can store it anywhere (although somewhere in your `PATH` is recommended for convenience).
 
@@ -12,4 +12,6 @@ Tester requires Python 2.7 to run and has no third party dependencies.
 
 ##To Do:
 - Exception handling
+- Add an option to ignore whitespace
+- Add some sort of template support so text that the program outputs every time, regardless of input, does not have to be included in every test case.
 - Watch for changes in the source files and rerun every time they change
