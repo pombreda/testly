@@ -24,7 +24,7 @@ except ValueError:
 
 try:
     filename = json_['filename']
-    tests = json_['cases']
+    tests = json_['tests']
 except KeyError as e:
     print 'tests.json is missing the %s property' % e
     exit(3)
@@ -33,28 +33,40 @@ i = 1
 num_tests = len(tests)
 
 for test in tests:
-    input_ = '\n'.join(test['input'])
-    expected_output = '\n'.join(test['output'])
+    before = [test['before']] if 'before' in test else []
+    after = [test['after']] if 'after' in test else []
+    cases = test['cases']
 
-    try:
-        process = Popen(['blob'], stdin=PIPE, stdout=PIPE)
-    except OSError:
-        print 'No file with the name "%s" found in the current directory' % filename
-        exit(4)
+    j = 1
+    num_cases = len(cases)
+    print 'Test %d:' % i
 
-    output, error = process.communicate(input=input_)
+    for case in cases:
+        input_ = '\n'.join(case['input'])
+        expected_output = '\n'.join(before + case['output'] + after)
 
-    didPass = output == expected_output
-    colour = pass_colour if didPass else fail_colour
-    symbol = tick if didPass else cross
-    word = 'passed' if didPass else 'failed'
+        try:
+            process = Popen([filename], stdin=PIPE, stdout=PIPE)
+        except OSError:
+            print 'No file with the name "%s" found in the current directory' % filename
+            exit(4)
 
-    print '%sTest %d of %d %s %s%s' % (colour, i, num_tests, word, symbol, end_colour)
-    print 'The program should %s.' % test['it_should']
+        output, error = process.communicate(input=input_)
 
-    if not didPass:
-        differ = difflib.Differ()
-        diff = difflib.ndiff(output.splitlines(), expected_output.splitlines())
-        print '\n'.join(diff)
+        didPass = output == expected_output
+        colour = pass_colour if didPass else fail_colour
+        symbol = tick if didPass else cross
+        word = 'passed' if didPass else 'failed'
+
+        print '%sCase %d of %d %s %s%s' % (colour, j, num_cases, word, symbol, end_colour)
+        print 'The program should %s.' % case['it_should']
+
+        if not didPass:
+            differ = difflib.Differ()
+            diff = difflib.ndiff(output.splitlines(), expected_output.splitlines())
+            print '\n'.join(diff)
+
+        j += 1
 
     i += 1
+    print ' '
