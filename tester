@@ -42,8 +42,10 @@ for test in tests:
     print 'Test %d:' % i
 
     for case in cases:
+        line_separator = case['line_separator'] if 'line_separator' in case else '\n'
+
         input_ = '\n'.join(case['input'])
-        expected_output = '\n'.join(before + case['output'] + after)
+        expected_output = line_separator.join(before + case['output'] + after)
 
         try:
             process = Popen([filename], stdin=PIPE, stdout=PIPE)
