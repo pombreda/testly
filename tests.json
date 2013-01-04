@@ -1,0 +1,30 @@
+{
+	"filename": "phonebook",
+	"cases": [
+		{
+			"it_should": "sort the entries into alphabetical order by name",
+			"input": [
+				"Tom 123",
+				"Bob 345",
+				"Jim 678"
+			],
+			"output": [
+				"Bob 345",
+				"Jim 678",
+				"Tom 123"
+			]
+		},
+		{
+			"it_should": "combine entries with the same name",
+			"input": [
+				"Tom 123",
+				"Tom 345",
+				"Jim 678"
+			],
+			"output": [
+				"Jim 678",
+				"Tom 123 345"
+			]
+		}
+	]
+}
