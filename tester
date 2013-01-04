@@ -10,10 +10,24 @@ pass_colour = '\033[92m'
 fail_colour = '\033[91m'
 end_colour = '\033[0m'
 
-file_ = open('tests.json').read()
-json_ = json.loads(file_)
-filename = json_['filename']
-tests = json_['cases']
+try:
+    file_ = open('tests.json').read()
+except IOError:
+    print 'No file named tests.json in the current directory'
+    exit(1)
+
+try:
+    json_ = json.loads(file_)
+except ValueError:
+    print 'tests.json does not contain a valid JSON object'
+    exit(2)
+
+try:
+    filename = json_['filename']
+    tests = json_['cases']
+except KeyError as e:
+    print 'tests.json is missing the %s property' % e
+    exit(3)
 
 i = 1
 num_tests = len(tests)
@@ -22,7 +36,12 @@ for test in tests:
     input_ = '\n'.join(test['input'])
     expected_output = '\n'.join(test['output'])
 
-    process = Popen([filename], stdin=PIPE, stdout=PIPE)
+    try:
+        process = Popen(['blob'], stdin=PIPE, stdout=PIPE)
+    except OSError:
+        print 'No file with the name "%s" found in the current directory' % filename
+        exit(4)
+
     output, error = process.communicate(input=input_)
 
     didPass = output == expected_output
