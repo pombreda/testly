@@ -40,9 +40,14 @@ def run_tests():
     num_tests = len(tests)
 
     for test in tests:
+        # Skip this iteration if there are no test cases
+        try:
+            cases = test['cases']
+        except KeyError:
+            continue
+
         before = [test['before']] if 'before' in test else []
         after = [test['after']] if 'after' in test else []
-        cases = test['cases']
 
         j = 1
         num_cases = len(cases)
@@ -83,12 +88,16 @@ def run_tests():
         i += 1
         print ' '
 
+# Define command line arguments
 parser = ArgumentParser()
+
+# Add the argument for running the program in watch mode
 parser.add_argument('-w', '--watch', action='store_true',
     help='Monitor the source files for changes and run the tests each time')
 args = parser.parse_args()
 
 if args.watch:
+    # Import Watchdog for monitoring the filesystem
     try:
         from watchdog.observers import Observer
         from watchdog.events import FileSystemEventHandler
@@ -96,6 +105,7 @@ if args.watch:
         print 'Watchdog module not installed. File watch functionality disabled'
         exit(7)
 
+    # Get the array of paths to watch from the JSON file
     default_paths = [
         {
             'path': '.',
@@ -108,22 +118,27 @@ if args.watch:
         print '"watch" property in tests.json is empty'
         exit(6)
 
+    # Override the base event handler class to run the tests when the files change
     class TestEventHandler(FileSystemEventHandler):
         def on_modified(self, event):
             run_tests()
 
+    # Create an instance of the new event handler and an observer
     event_handler = TestEventHandler()
     observer = Observer()
 
+    # Register the event for each path in the array
     for path in paths_to_watch:
         path_string = path['path'] if 'path' in path else '.'
         recursive = path['recursive'] if 'recursive' in path else True
 
         observer.schedule(event_handler, path=path_string, recursive=recursive)
 
+    # Start watching changes
     print 'Watching for changes. Press Ctrl+C to cancel'
     observer.start()
 
+    # Allow the monitoring loop to be interrupted by a keyboard event
     try:
         while True:
             time.sleep(1)
@@ -131,5 +146,6 @@ if args.watch:
         observer.stop()
     observer.join()
 
+# Run the tests once if not in watch mode
 else:
     run_tests()
