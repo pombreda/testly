@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(
-    name='Tester',
+    name='Testly',
     version='0.1',
-    py_modules=['tester']
+    py_modules=['testly']
 )
