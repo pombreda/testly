@@ -8,11 +8,10 @@ The JSON file contains the name of the executable to test, and an array of objec
 
 If the output matches the spec, the test passes. If not, a diff is shown, so you can work out what's going wrong.
 
-Tester requires Python 2.7 to run and has no third party dependencies.
+You can pass `-w` to the program and it will watch the source files of your program and re-run the tests every time they change. The files and directories to be watched are defined by an array of strings under the `watch` property in the test spec file.
+
+Tester requires Python 2.7 and [Watchdog](https://github.com/gorakhargosh/watchdog) to use the file watch functionality.
 
 ## To Do:
-- Add an option to ignore whitespace
-- Quit if input does not cause program being tested to terminate after a specified time limit
 - Add some sort of template support so text that the program outputs every time, regardless of input, does not have to be included in every test case.
-- Watch for changes in the source files and rerun every time they change
 - Submit it to PyPI

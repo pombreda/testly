@@ -1,5 +1,14 @@
 {
 	"filename": "phonebook",
+	"watch": [
+		{
+			"path": "./src/",
+		},
+		{
+			"path": "./util/",
+			"recursive": false
+		}
+	],
 	"tests": [
 		{
 			"before": "Do you want to print all entries? (y/n)",
