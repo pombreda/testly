@@ -4,18 +4,21 @@ import json
 from subprocess import Popen, PIPE
 import difflib
 
+# Define ASCII escape characters for special symbols and text colouring
 tick = '\xE2\x9C\x94'
 cross = '\xE2\x9C\x97'
 pass_colour = '\033[92m'
 fail_colour = '\033[91m'
 end_colour = '\033[0m'
 
+# Open the JSON file
 try:
     file_ = open('tests.json').read()
 except IOError:
     print 'No file named tests.json in the current directory'
     exit(1)
 
+# Parse the file contents into a Python dictionary
 try:
     json_ = json.loads(file_)
 except ValueError:
@@ -47,12 +50,14 @@ for test in tests:
         input_ = '\n'.join(case['input'])
         expected_output = line_separator.join(before + case['output'] + after)
 
+        # Spawn a subprocess by running the executable to be tested
         try:
             process = Popen([filename], stdin=PIPE, stdout=PIPE)
         except OSError:
             print 'No file with the name "%s" found in the current directory' % filename
             exit(4)
 
+        # Send this test case's input to the process
         output, error = process.communicate(input=input_)
 
         didPass = output == expected_output
@@ -60,9 +65,11 @@ for test in tests:
         symbol = tick if didPass else cross
         word = 'passed' if didPass else 'failed'
 
+        # Print the results of this test case
         print '%sCase %d of %d %s %s%s' % (colour, j, num_cases, word, symbol, end_colour)
         print 'The program should %s.' % case['it_should']
 
+        # Print the diff of the actual output and the expected output if they do not match
         if not didPass:
             differ = difflib.Differ()
             diff = difflib.ndiff(output.splitlines(), expected_output.splitlines())

@@ -10,8 +10,7 @@ If the output matches the spec, the test passes. If not, a diff is shown, so you
 
 Tester requires Python 2.7 to run and has no third party dependencies.
 
-##To Do:
-- Exception handling
+## To Do:
 - Add an option to ignore whitespace
 - Quit if input does not cause program being tested to terminate after a specified time limit
 - Add some sort of template support so text that the program outputs every time, regardless of input, does not have to be included in every test case.
