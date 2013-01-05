@@ -96,11 +96,13 @@ if args.watch:
         print 'Watchdog module not installed. File watch functionality disabled'
         exit(7)
 
-    try:
-        paths_to_watch = json_['watch']
-    except KeyError:
-        print 'No files to watch specified in tests.json'
-        exit(5)
+    default_paths = [
+        {
+            'path': '.',
+            'recursive': True
+        }
+    ]
+    paths_to_watch = json_['watch'] if 'watch' in json_ else default_paths
 
     if len(paths_to_watch) < 1:
         print '"watch" property in tests.json is empty'
@@ -112,7 +114,12 @@ if args.watch:
 
     event_handler = TestEventHandler()
     observer = Observer()
-    observer.schedule(event_handler, path='.', recursive=True)
+
+    for path in paths_to_watch:
+        path_string = path['path'] if 'path' in path else '.'
+        recursive = path['recursive'] if 'recursive' in path else True
+
+        observer.schedule(event_handler, path=path_string, recursive=recursive)
 
     print 'Watching for changes. Press Ctrl+C to cancel'
     observer.start()
