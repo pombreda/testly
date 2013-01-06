@@ -18,7 +18,7 @@ class Testly:
     def __init__(self):
         # Open the JSON file
         try:
-            file_ = open('tests.json').read()
+            file_ = open('tests.yaml').read()
         except IOError:
             print 'No file named tests.json in the current directory'
             exit(1)
@@ -142,35 +142,21 @@ class Testly:
             print 'Test %d of %d:' % (i, num_tests)
 
             for case in cases:
-                line_separator = case['line_separator'] if 'line_separator' in case else '\n'
+                # line_separator = case['line_separator'] if 'line_separator' in case else '\n'
 
-                # If there is no template for the input, assume the input property is an array
-                # of strings, each representing one line of input. Create the input string by
-                # joining them with a line break.
+                # If there is no template for the input, assume the input property is a string.
                 if input_template == None:
-                    input_ = '\n'.join(case['input'])
+                    input_ = case['input']
                 # If there is an input template, assume the input property is a dictionary
-                # where each property is present in the template and is an array of strings to
-                # be joined into one string to be interpolated into the template, and
-                # create the input string that way.
+                # of strings to be interpolated into the template.
                 else:
-                    input_dictionary = case['input']
-                    joined_dictionary = {}
-                    for key in input_dictionary:
-                        joined_dictionary[key] = '\n'.join(input_dictionary[key])
-
-                    input_ = pystache.render(input_template, joined_dictionary)
+                    input_ = pystache.render(input_template, case['input'])
 
                 # Same procedure for the output template
                 if output_template == None:
-                    expected_output = line_separator.join(case['output'])
+                    expected_output = case['output']
                 else:
-                    output_dictionary = case['output']
-                    joined_dictionary = {}
-                    for key in output_dictionary:
-                        joined_dictionary[key] = line_separator.join(output_dictionary[key])
-
-                    expected_output = pystache.render(output_template, joined_dictionary)
+                    expected_output = pystache.render(output_template, case['output'])
 
                 # Spawn a subprocess by running the executable to be tested
                 try:
@@ -195,6 +181,8 @@ class Testly:
                 if not didPass:
                     diff = difflib.ndiff(output.splitlines(), expected_output.splitlines())
                     print '\n'.join(diff)
+                    print output
+                    print expected_output
 
                 j += 1
 
