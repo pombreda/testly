@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import json
+import yaml
 from subprocess import Popen, PIPE
 import difflib
 import time
@@ -13,184 +13,194 @@ pass_colour = '\033[92m'
 fail_colour = '\033[91m'
 end_colour = '\033[0m'
 
-# Open the JSON file
-try:
-    file_ = open('tests.json').read()
-except IOError:
-    print 'No file named tests.json in the current directory'
-    exit(1)
 
-# Parse the file contents into a Python dictionary
-try:
-    json_ = json.loads(file_)
-except ValueError:
-    print 'tests.json does not contain a valid JSON object'
-    exit(2)
-
-try:
-    filename = json_['filename']
-    tests = json_['tests']
-except KeyError as e:
-    print 'tests.json is missing the %s property' % e
-    exit(3)
-
-
-def run_tests():
-    # Determine whether any templates are used in the test spec file
-    uses_templates = False
-    for test in tests:
-        if 'templates' in test:
-            uses_templates = True
-            break
-
-    # Import Pystache for templating if needed
-    if uses_templates:
+class Testly:
+    def __init__(self):
+        # Open the JSON file
         try:
-            import pystache
-        except ImportError:
-            print 'Pystache module not installed, tests with templates will not be run'
+            file_ = open('tests.json').read()
+        except IOError:
+            print 'No file named tests.json in the current directory'
+            exit(1)
 
-    i = 1
-    num_tests = len(tests)
-
-    for test in tests:
-        # Skip this iteration if there are no test cases
+        # Parse the file contents into a Python dictionary
         try:
-            cases = test['cases']
-        except KeyError:
-            continue
+            doc = yaml.load(file_)
+        except ValueError as e:
+            print 'tests.json does not contain a valid JSON object'
+            print e
+            exit(2)
 
-        input_template = None
-        output_template = None
-        if 'templates' in test:
-            templates = test['templates']
-            if 'output' in templates:
-                output_template = templates['output']
-            if 'input' in templates:
-                input_template = templates['input']
+        try:
+            self.filename = doc['filename']
+            self.tests = doc['tests']
+        except KeyError as e:
+            print 'tests.json is missing the %s property' % e
+            exit(3)
+        # Define command line arguments
+        parser = ArgumentParser()
 
-        j = 1
-        num_cases = len(cases)
-        print 'Test %d of %d:' % (i, num_tests)
+        # Add the argument for running the program in watch mode
+        parser.add_argument('-w', '--watch', action='store_true',
+            help='Monitor the source files for changes and run the tests each time')
+        args = parser.parse_args()
 
-        for case in cases:
-            line_separator = case['line_separator'] if 'line_separator' in case else '\n'
-
-            # If there is no template for the input, assume the input property is an array
-            # of strings, each representing one line of input. Create the input string by
-            # joining them with a line break.
-            if input_template == None:
-                input_ = '\n'.join(case['input'])
-            # If there is an input template, assume the input property is a dictionary
-            # where each property is present in the template and is an array of strings to
-            # be joined into one string to be interpolated into the template, and
-            # create the input string that way.
-            else:
-                input_dictionary = case['input']
-                joined_dictionary = {}
-                for key in input_dictionary:
-                    joined_dictionary[key] = '\n'.join(input_dictionary[key])
-
-                input_ = pystache.render(input_template, joined_dictionary)
-
-            # Same procedure for the output template
-            if output_template == None:
-                expected_output = line_separator.join(case['output'])
-            else:
-                output_dictionary = case['output']
-                joined_dictionary = {}
-                for key in output_dictionary:
-                    joined_dictionary[key] = line_separator.join(output_dictionary[key])
-
-                expected_output = pystache.render(output_template, joined_dictionary)
-
-            # Spawn a subprocess by running the executable to be tested
+        if args.watch:
+            # Import Watchdog for monitoring the filesystem
             try:
-                process = Popen([filename], stdin=PIPE, stdout=PIPE)
-            except OSError:
-                print 'No file with the name "%s" found in the current directory' % filename
-                exit(4)
+                from watchdog.observers import Observer
+                from watchdog.events import FileSystemEventHandler
+            except ImportError:
+                print 'Watchdog module not installed. File watch functionality disabled'
+                exit(7)
 
-            # Send this test case's input to the process
-            output, error = process.communicate(input=input_)
+            # Get the array of paths to watch from the JSON file
+            default_paths = [
+                {
+                    'path': '.',
+                    'recursive': True
+                }
+            ]
+            paths_to_watch = doc['watch'] if 'watch' in doc else default_paths
 
-            didPass = output == expected_output
-            colour = pass_colour if didPass else fail_colour
-            symbol = tick if didPass else cross
-            word = 'passed' if didPass else 'failed'
+            if len(paths_to_watch) < 1:
+                print '"watch" property in tests.json is empty'
+                exit(6)
 
-            # Print the results of this test case
-            print '%sCase %d of %d %s %s%s' % (colour, j, num_cases, word, symbol, end_colour)
-            print 'The program should %s.' % case['it_should']
+            # Override the base event handler class to run the tests when the files change
+            class TestEventHandler(FileSystemEventHandler):
+                def __init__(self, callback):
+                    FileSystemEventHandler.__init__(self)
+                    self.callback = callback
 
-            # Print the diff of the actual output and the expected output if they do not match
-            if not didPass:
-                diff = difflib.ndiff(output.splitlines(), expected_output.splitlines())
-                print '\n'.join(diff)
+                def on_modified(self, event):
+                    self.callback()
 
-            j += 1
+            # Create an instance of the new event handler and an observer
+            event_handler = TestEventHandler(self.run)
+            observer = Observer()
 
-        i += 1
-        print ' '
+            # Register the event for each path in the array
+            for path in paths_to_watch:
+                path_string = path['path'] if 'path' in path else '.'
+                recursive = path['recursive'] if 'recursive' in path else True
 
-# Define command line arguments
-parser = ArgumentParser()
+                observer.schedule(event_handler, path=path_string, recursive=recursive)
 
-# Add the argument for running the program in watch mode
-parser.add_argument('-w', '--watch', action='store_true',
-    help='Monitor the source files for changes and run the tests each time')
-args = parser.parse_args()
+            # Start watching changes
+            print 'Watching for changes. Press Ctrl+C to cancel'
+            observer.start()
 
-if args.watch:
-    # Import Watchdog for monitoring the filesystem
-    try:
-        from watchdog.observers import Observer
-        from watchdog.events import FileSystemEventHandler
-    except ImportError:
-        print 'Watchdog module not installed. File watch functionality disabled'
-        exit(7)
+            # Allow the monitoring loop to be interrupted by a keyboard event
+            try:
+                while True:
+                    time.sleep(1)
+            except KeyboardInterrupt:
+                observer.stop()
+            observer.join()
 
-    # Get the array of paths to watch from the JSON file
-    default_paths = [
-        {
-            'path': '.',
-            'recursive': True
-        }
-    ]
-    paths_to_watch = json_['watch'] if 'watch' in json_ else default_paths
+        # Run the tests once if not in watch mode
+        else:
+            self.run()
 
-    if len(paths_to_watch) < 1:
-        print '"watch" property in tests.json is empty'
-        exit(6)
+    def run(self):
+        # Determine whether any templates are used in the test spec file
+        uses_templates = False
+        for test in self.tests:
+            if 'templates' in test:
+                uses_templates = True
+                break
 
-    # Override the base event handler class to run the tests when the files change
-    class TestEventHandler(FileSystemEventHandler):
-        def on_modified(self, event):
-            run_tests()
+        # Import Pystache for templating if needed
+        if uses_templates:
+            try:
+                import pystache
+            except ImportError:
+                print 'Pystache module not installed, tests with templates will not be run'
 
-    # Create an instance of the new event handler and an observer
-    event_handler = TestEventHandler()
-    observer = Observer()
+        i = 1
+        num_tests = len(self.tests)
 
-    # Register the event for each path in the array
-    for path in paths_to_watch:
-        path_string = path['path'] if 'path' in path else '.'
-        recursive = path['recursive'] if 'recursive' in path else True
+        for test in self.tests:
+            # Skip this iteration if there are no test cases
+            try:
+                cases = test['cases']
+            except KeyError:
+                continue
 
-        observer.schedule(event_handler, path=path_string, recursive=recursive)
+            input_template = None
+            output_template = None
+            if 'templates' in test:
+                templates = test['templates']
+                if 'output' in templates:
+                    output_template = templates['output']
+                if 'input' in templates:
+                    input_template = templates['input']
 
-    # Start watching changes
-    print 'Watching for changes. Press Ctrl+C to cancel'
-    observer.start()
+            j = 1
+            num_cases = len(cases)
+            print 'Test %d of %d:' % (i, num_tests)
 
-    # Allow the monitoring loop to be interrupted by a keyboard event
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        observer.stop()
-    observer.join()
+            for case in cases:
+                line_separator = case['line_separator'] if 'line_separator' in case else '\n'
 
-# Run the tests once if not in watch mode
-else:
-    run_tests()
+                # If there is no template for the input, assume the input property is an array
+                # of strings, each representing one line of input. Create the input string by
+                # joining them with a line break.
+                if input_template == None:
+                    input_ = '\n'.join(case['input'])
+                # If there is an input template, assume the input property is a dictionary
+                # where each property is present in the template and is an array of strings to
+                # be joined into one string to be interpolated into the template, and
+                # create the input string that way.
+                else:
+                    input_dictionary = case['input']
+                    joined_dictionary = {}
+                    for key in input_dictionary:
+                        joined_dictionary[key] = '\n'.join(input_dictionary[key])
+
+                    input_ = pystache.render(input_template, joined_dictionary)
+
+                # Same procedure for the output template
+                if output_template == None:
+                    expected_output = line_separator.join(case['output'])
+                else:
+                    output_dictionary = case['output']
+                    joined_dictionary = {}
+                    for key in output_dictionary:
+                        joined_dictionary[key] = line_separator.join(output_dictionary[key])
+
+                    expected_output = pystache.render(output_template, joined_dictionary)
+
+                # Spawn a subprocess by running the executable to be tested
+                try:
+                    process = Popen([self.filename], stdin=PIPE, stdout=PIPE)
+                except OSError:
+                    print 'No file with the name "%s" found in the current directory' % self.filename
+                    exit(4)
+
+                # Send this test case's input to the process
+                output, error = process.communicate(input=input_)
+
+                didPass = output == expected_output
+                colour = pass_colour if didPass else fail_colour
+                symbol = tick if didPass else cross
+                word = 'passed' if didPass else 'failed'
+
+                # Print the results of this test case
+                print '%sCase %d of %d %s %s%s' % (colour, j, num_cases, word, symbol, end_colour)
+                print 'The program should %s.' % case['it_should']
+
+                # Print the diff of the actual output and the expected output if they do not match
+                if not didPass:
+                    diff = difflib.ndiff(output.splitlines(), expected_output.splitlines())
+                    print '\n'.join(diff)
+
+                j += 1
+
+            i += 1
+            print ' '
+
+
+def main():
+    Testly()

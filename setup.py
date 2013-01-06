@@ -16,7 +16,11 @@ setup(
 
     install_requires=[
         'watchdog',
-        'pystache'
+        'pystache',
+        'pyyaml'
     ],
-    py_modules=['testly']
+    py_modules=['testly'],
+    entry_points={
+        'console_scripts': ['testly=testly:main']
+    }
 )
