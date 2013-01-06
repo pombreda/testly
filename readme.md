@@ -31,3 +31,12 @@ You can pass `-w` to the program and it will watch the source files of your prog
 - [PyYAML](http://pypi.python.org/pypi/PyYAML)
 - [Watchdog](https://github.com/gorakhargosh/watchdog) if you want the file watch functionality
 - [Pystache](https://github.com/defunkt/pystache) if you want templating support
+
+## Changelog
+
+### 0.2
+- Tests are now defined in YAML instead of JSON
+- Added support for templates
+
+### 0.1
+- Inital Release
