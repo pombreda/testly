@@ -14,4 +14,3 @@ Testly requires Python 2.7 and [Watchdog](https://github.com/gorakhargosh/watchd
 
 ## To Do:
 - Add some sort of template support so text that the program outputs every time, regardless of input, does not have to be included in every test case.
-- Submit it to PyPI
