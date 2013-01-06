@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
-# from distutils.core import setup
 import os
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
     name='Testly',
@@ -15,5 +14,8 @@ setup(
     description='Test a program\'s basic IO using JSON test cases',
     long_description=open(os.path.join(os.path.dirname(__file__), 'readme.md')).read(),
 
+    install_requires=[
+        'watchdog'
+    ],
     py_modules=['testly']
 )
