@@ -19,7 +19,7 @@ setup(
         'pystache',
         'pyyaml'
     ],
-    py_modules=['testly'],
+    py_modules=['testly', 'specfile', 'fileobserver'],
     entry_points={
         'console_scripts': ['testly=testly:main']
     }
