@@ -25,6 +25,3 @@ You can pass `-w` to the program and it will watch the source files of your prog
 
 ## What does it need?
 Testly requires Python 2.7 and [Watchdog](https://github.com/gorakhargosh/watchdog) to use the file watch functionality.
-
-## To Do:
-- Add some sort of template support so text that the program outputs every time, regardless of input, does not have to be included in every test case.
