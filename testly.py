@@ -36,6 +36,20 @@ except KeyError as e:
 
 
 def run_tests():
+    # Determine whether any templates are used in the test spec file
+    uses_templates = False
+    for test in tests:
+        if 'templates' in test:
+            uses_templates = True
+            break
+
+    # Import Pystache for templating if needed
+    if uses_templates:
+        try:
+            import pystache
+        except ImportError:
+            print 'Pystache module not installed, tests with templates will not be run'
+
     i = 1
     num_tests = len(tests)
 
@@ -46,8 +60,14 @@ def run_tests():
         except KeyError:
             continue
 
-        before = [test['before']] if 'before' in test else []
-        after = [test['after']] if 'after' in test else []
+        input_template = None
+        output_template = None
+        if 'templates' in test:
+            templates = test['templates']
+            if 'output' in templates:
+                output_template = templates['output']
+            if 'input' in templates:
+                input_template = templates['input']
 
         j = 1
         num_cases = len(cases)
@@ -56,8 +76,33 @@ def run_tests():
         for case in cases:
             line_separator = case['line_separator'] if 'line_separator' in case else '\n'
 
-            input_ = '\n'.join(case['input'])
-            expected_output = line_separator.join(before + case['output'] + after)
+            # If there is no template for the input, assume the input property is an array
+            # of strings, each representing one line of input. Create the input string by
+            # joining them with a line break.
+            if input_template == None:
+                input_ = '\n'.join(case['input'])
+            # If there is an input template, assume the input property is a dictionary
+            # where each property is present in the template and is an array of strings to
+            # be joined into one string to be interpolated into the template, and
+            # create the input string that way.
+            else:
+                input_dictionary = case['input']
+                joined_dictionary = {}
+                for key in input_dictionary:
+                    joined_dictionary[key] = '\n'.join(input_dictionary[key])
+
+                input_ = pystache.render(input_template, joined_dictionary)
+
+            # Same procedure for the output template
+            if output_template == None:
+                expected_output = line_separator.join(case['output'])
+            else:
+                output_dictionary = case['output']
+                joined_dictionary = {}
+                for key in output_dictionary:
+                    joined_dictionary[key] = line_separator.join(output_dictionary[key])
+
+                expected_output = pystache.render(output_template, joined_dictionary)
 
             # Spawn a subprocess by running the executable to be tested
             try:

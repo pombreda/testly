@@ -15,7 +15,8 @@ setup(
     long_description=open(os.path.join(os.path.dirname(__file__), 'readme.md')).read(),
 
     install_requires=[
-        'watchdog'
+        'watchdog',
+        'pystache'
     ],
     py_modules=['testly']
 )

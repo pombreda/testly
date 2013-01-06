@@ -24,4 +24,7 @@ If the output matches the spec, the test passes. If not, a diff is shown, so you
 You can pass `-w` to the program and it will watch the source files of your program and re-run the tests every time they change. The files and directories to be watched are defined by an array of strings under the `watch` property in the test spec file.
 
 ## What does it need?
-Testly requires Python 2.7 and [Watchdog](https://github.com/gorakhargosh/watchdog) to use the file watch functionality.
+- Python 2.6
+- [Argparse](http://pypi.python.org/pypi/argparse) if using Python version < 2.7
+- [Watchdog](https://github.com/gorakhargosh/watchdog) if you want the file watch functionality
+- [Pystache](https://github.com/defunkt/pystache) if you want templating support
