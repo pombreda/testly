@@ -5,10 +5,14 @@ Testly is a tool for testing command line programs that read from `stdin` and wr
 
 ## How do I get it?
 `[sudo] pip install testly`
+
 or
-	git clone git://github.com/lavelle/testly.git
-	cd testly
-	python setup.py install
+
+```
+git clone git://github.com/lavelle/testly.git
+cd testly
+python setup.py install
+```
 
 ## How do I use it?
 Test cases are defined in a JSON file called `tests.json`, in the same directory as your program executable. You must run the Testly script from this directory, but you can store it anywhere (although somewhere in your `PATH` is recommended for convenience).
