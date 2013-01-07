@@ -64,10 +64,9 @@ class Testly:
             except ImportError:
                 print 'Pystache module not installed, tests with templates will not be run'
 
-        i = 1
         num_tests = len(self.tests)
 
-        for test in self.tests:
+        for i, test in enumerate(self.tests):
             # Skip this iteration if there are no test cases
             try:
                 cases = test['cases']
@@ -83,11 +82,10 @@ class Testly:
                 if 'input' in templates:
                     input_template = templates['input']
 
-            j = 1
             num_cases = len(cases)
-            print 'Test %d of %d:' % (i, num_tests)
+            print 'Test %d of %d:' % (i + 1, num_tests)
 
-            for case in cases:
+            for j, case in enumerate(cases):
                 # If there is no template for the input, assume the input property is a string.
                 if input_template == None:
                     input_ = case['input']
@@ -112,25 +110,22 @@ class Testly:
                 # Send this test case's input to the process
                 output, error = process.communicate(input=input_)
 
-                didPass = output == expected_output
-                colour = pass_colour if didPass else fail_colour
-                symbol = tick if didPass else cross
-                word = 'passed' if didPass else 'failed'
+                did_pass = output == expected_output
+                colour = pass_colour if did_pass else fail_colour
+                symbol = tick if did_pass else cross
+                word = 'passed' if did_pass else 'failed'
 
                 # Print the results of this test case
-                print '%sCase %d of %d %s %s%s' % (colour, j, num_cases, word, symbol, end_colour)
+                print '%sCase %d of %d %s %s%s' % (colour, j + 1, num_cases, word, symbol, end_colour)
                 print 'The program should %s.' % case['it_should']
 
                 # Print the diff of the actual output and the expected output if they do not match
-                if not didPass:
+                if not did_pass:
                     diff = difflib.ndiff(output.splitlines(), expected_output.splitlines())
                     print '\n'.join(diff)
                     print output
                     print expected_output
 
-                j += 1
-
-            i += 1
             print ' '
 
 
