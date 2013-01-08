@@ -12,6 +12,7 @@ cross = '\xE2\x9C\x97'
 pass_colour = '\033[92m'
 fail_colour = '\033[91m'
 end_colour = '\033[0m'
+base_indent = '  '
 
 
 def parse_args():
@@ -33,7 +34,7 @@ class Testly:
 
         try:
             self.filename = doc['filename']
-            self.tests = doc['tests']
+            self.groups = doc['groups']
         except KeyError as e:
             print 'Spec file is missing the %s property' % e
             exit(3)
@@ -49,83 +50,100 @@ class Testly:
         else:
             self.run()
 
-    def run(self):
+    def uses_templates(self):
         # Determine whether any templates are used in the test spec file
-        uses_templates = False
-        for test in self.tests:
-            if 'templates' in test:
-                uses_templates = True
-                break
+        for group in self.groups:
+            if 'templates' in group:
+                return True
 
+        return False
+
+    def extract_templates(self, group):
+        inp = outp = None
+        if 'templates' in group:
+            templates = group['templates']
+            if 'output' in templates:
+                outp = templates['output']
+            if 'input' in templates:
+                inp = templates['input']
+
+        return inp, outp
+
+    def run(self):
         # Import Pystache for templating if needed
-        if uses_templates:
+        if self.uses_templates():
             try:
                 import pystache
             except ImportError:
                 print 'Pystache module not installed, tests with templates will not be run'
 
-        num_tests = len(self.tests)
+        num_groups = len(self.groups)
 
-        for i, test in enumerate(self.tests):
+        for i, group in enumerate(self.groups):
+            indent_level = 0
+
             # Skip this iteration if there are no test cases
             try:
-                cases = test['cases']
+                tests = group['tests']
             except KeyError:
                 continue
 
-            input_template = None
-            output_template = None
-            if 'templates' in test:
-                templates = test['templates']
-                if 'output' in templates:
-                    output_template = templates['output']
-                if 'input' in templates:
-                    input_template = templates['input']
+            input_template, output_template = self.extract_templates(group)
 
-            num_cases = len(cases)
-            print 'Test %d of %d:' % (i + 1, num_tests)
+            num_tests = len(tests)
+            print 'Group %d of %d:' % (i + 1, num_groups)
 
-            for j, case in enumerate(cases):
-                # If there is no template for the input, assume the input property is a string.
-                if input_template == None:
-                    input_ = case['input']
-                # If there is an input template, assume the input property is a dictionary
-                # of strings to be interpolated into the template.
-                else:
-                    input_ = pystache.render(input_template, case['input'])
+            for j, test in enumerate(tests):
+                indent_level = 1
 
-                # Same procedure for the output template
-                if output_template == None:
-                    expected_output = case['output']
-                else:
-                    expected_output = pystache.render(output_template, case['output'])
+                cases = test['cases']
 
-                # Spawn a subprocess by running the executable to be tested
-                try:
-                    process = Popen([self.filename], stdin=PIPE, stdout=PIPE)
-                except OSError:
-                    print 'No file with the name "%s" found in the current directory' % self.filename
-                    exit(4)
+                num_cases = len(cases)
+                print '  Test %d of %d:' % (j + 1, num_tests)
+                print '  The program should %s.' % test['it_should']
 
-                # Send this test case's input to the process
-                output, error = process.communicate(input=input_)
+                for k, case in enumerate(cases):
+                    indent_level = 2
 
-                did_pass = output == expected_output
-                colour = pass_colour if did_pass else fail_colour
-                symbol = tick if did_pass else cross
-                word = 'passed' if did_pass else 'failed'
+                    # If there is no template for the input, assume the input property is a string.
+                    if input_template == None:
+                        input_ = case['input']
+                    # If there is an input template, assume the input property is a dictionary
+                    # of strings to be interpolated into the template.
+                    else:
+                        input_ = pystache.render(input_template, case['input'])
 
-                # Print the results of this test case
-                print '%sCase %d of %d %s %s%s' % (colour, j + 1, num_cases, word, symbol, end_colour)
-                print 'The program should %s.' % case['it_should']
+                    # Same procedure for the output template
+                    if output_template == None:
+                        expected_output = case['output']
+                    else:
+                        expected_output = pystache.render(output_template, case['output'])
 
-                # Print the diff of the actual output and the expected output if they do not match
-                if not did_pass:
-                    diff = difflib.ndiff(output.splitlines(), expected_output.splitlines())
-                    print '\n'.join(diff)
-                    print output
-                    print expected_output
+                    # Spawn a subprocess by running the executable to be tested
+                    try:
+                        process = Popen([self.filename], stdin=PIPE, stdout=PIPE)
+                    except OSError:
+                        print 'No file with the name "%s" found in the current directory' % self.filename
+                        exit(4)
 
+                    # Send this test case's input to the process
+                    output, error = process.communicate(input=input_)
+
+                    did_pass = output == expected_output
+                    colour = pass_colour if did_pass else fail_colour
+                    symbol = tick if did_pass else cross
+                    word = 'passed' if did_pass else 'failed'
+
+                    # Print the results of this test case
+                    print '    %sCase %d of %d %s %s%s' % \
+                        (colour, k + 1, num_cases, word, symbol, end_colour)
+
+                    # Print the diff of the actual output and the expected output if they do not match
+                    if not did_pass:
+                        diff = difflib.ndiff(output.splitlines(), expected_output.splitlines())
+                        print '\n'.join(diff)
+
+                print ' '
             print ' '
 
 
