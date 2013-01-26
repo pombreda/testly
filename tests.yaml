@@ -39,7 +39,7 @@ groups:
           output:
             entries: |-
               aaron 456
-              andy 789
+              Andy 789
               ZACH 123
 
   - templates:
