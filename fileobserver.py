@@ -32,7 +32,7 @@ class FileObserver:
             paths_to_watch = default_paths
 
         if len(paths_to_watch) < 1:
-            print '"watch" property in tests.json is empty'
+            print '"watch" property in the spec file is empty'
             exit(6)
 
         # Create an instance of the new event handler and an observer

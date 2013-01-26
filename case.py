@@ -40,7 +40,7 @@ class Case:
         try:
             process = Popen([filename], stdin=PIPE, stdout=PIPE)
         except OSError:
-            print 'No file with the name "%s" found in the current directory' % self.filename
+            print 'No file with the name "%s" found in the current directory' % filename
             exit(4)
 
         # Send this test case's input to the process
