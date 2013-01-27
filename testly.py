@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 
 import specfile
 import fileobserver
-from case import Case
+from case import *
 
 
 def parse_args():
@@ -64,6 +64,9 @@ class Testly:
     def run(self):
         num_groups = len(self.groups)
 
+        num_failures = 0
+        total_cases = 0
+
         for i, group in enumerate(self.groups):
             # Skip this iteration if there are no tests
             try:
@@ -87,8 +90,18 @@ class Testly:
                     case.run(self.filename)
                     case.print_results(num_cases)
 
+                    total_cases += 1
+                    if not case.did_pass:
+                        num_failures += 1
+
                 print ' '
             print ' '
+
+        if num_failures == 0:
+            print '%sAll test cases passed %s%s' % (pass_colour, tick, end_colour)
+        else:
+            print '%s%d of %d test cases failed %s%s' % \
+                (fail_colour, num_failures, total_cases, cross, end_colour)
 
 
 def main():

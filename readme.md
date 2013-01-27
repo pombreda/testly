@@ -34,6 +34,9 @@ You can pass `-w` to the program and it will watch the source files of your prog
 
 ## Changelog
 
+### 0.2.1
+- Added summary message showing total number of failed tests
+
 ### 0.2
 - Tests are now defined in YAML instead of JSON
 - Added support for templates

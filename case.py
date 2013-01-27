@@ -45,16 +45,15 @@ class Case:
 
         # Send this test case's input to the process
         self.output, error = process.communicate(input=input_)
+        self.did_pass = self.output == self.expected_output
 
     def print_results(self, total):
-        did_pass = self.output == self.expected_output
-
-        colour = pass_colour if did_pass else fail_colour
-        symbol = tick if did_pass else cross
-        word = 'passed' if did_pass else 'failed'
+        colour = pass_colour if self.did_pass else fail_colour
+        symbol = tick if self.did_pass else cross
+        word = 'passed' if self.did_pass else 'failed'
 
         # Print the diff of the actual output and the expected output if they do not match
-        if not did_pass:
+        if not self.did_pass:
             diff = difflib.ndiff(self.output.splitlines(), self.expected_output.splitlines())
             print '\n'.join(diff)
 
