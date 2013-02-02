@@ -25,7 +25,7 @@ class Testly:
         doc = spec_file.doc
 
         try:
-            self.filename = doc['filename']
+            self.command = doc['command']
             self.groups = doc['groups']
         except KeyError as e:
             print 'Spec file is missing the %s property' % e
@@ -87,7 +87,7 @@ class Testly:
                 cases = (Case(case, k, templates) for k, case in enumerate(test['cases']))
 
                 for case in cases:
-                    case.run(self.filename)
+                    case.run(self.command)
                     case.print_results(num_cases)
 
                     total_cases += 1

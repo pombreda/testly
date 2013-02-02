@@ -1,4 +1,4 @@
-filename: phonebook
+command: ['phonebook']
 
 watch:
   - path: ./src/

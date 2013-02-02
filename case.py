@@ -21,14 +21,17 @@ class Case:
         self.input_template, self.output_template = templates
         self.index = index + 1
 
-    def run(self, filename):
-        # If there is no template for the input, assume the input property is a string.
-        if self.input_template == None:
-            input_ = self.case['input']
-        # If there is an input template, assume the input property is a dictionary
-        # of strings to be interpolated into the template.
+    def run(self, command):
+        if 'input' in self.case:
+            # If there is no template for the input, assume the input property is a string.
+            if self.input_template == None:
+                input_ = self.case['input']
+            # If there is an input template, assume the input property is a dictionary
+            # of strings to be interpolated into the template.
+            else:
+                input_ = pystache.render(self.input_template, self.case['input'])
         else:
-            input_ = pystache.render(self.input_template, self.case['input'])
+            input_ = ''
 
         # Same procedure for the output template
         if self.output_template == None:
@@ -36,11 +39,14 @@ class Case:
         else:
             self.expected_output = pystache.render(self.output_template, self.case['output'])
 
+        if 'arguments' in self.case:
+            command += self.case['arguments']
+
         # Spawn a subprocess by running the executable to be tested
         try:
-            process = Popen([filename], stdin=PIPE, stdout=PIPE)
+            process = Popen(command, stdin=PIPE, stdout=PIPE)
         except OSError:
-            print 'No file with the name "%s" found in the current directory' % filename
+            print 'Command "%s" failed to execute. Is the program in your $PATH?' % ' '.join(command)
             exit(4)
 
         # Send this test case's input to the process
