@@ -98,7 +98,7 @@ class Testly:
             print ' '
 
         if num_failures == 0:
-            print '%sAll test cases passed %s%s' % (pass_colour, tick, end_colour)
+            print '%sAll %d test cases passed %s%s' % (pass_colour, total_cases, tick, end_colour)
         else:
             print '%s%d of %d test cases failed %s%s' % \
                 (fail_colour, num_failures, total_cases, cross, end_colour)
