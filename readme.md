@@ -34,6 +34,9 @@ You can pass `-w` to the program and it will watch the source files of your prog
 
 ## Changelog
 
+### 0.2.2
+- Added support for command line arguments, both global and per-case
+
 ### 0.2.1
 - Added summary message showing total number of failed tests
 
