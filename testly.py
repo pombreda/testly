@@ -39,7 +39,7 @@ class Testly:
                 self.groups = doc['groups']
             except KeyError as e:
                 print 'Spec file is missing the %s property' % e
-                exit(3)
+                exit(1)
 
             if args.watch:
                 paths_to_watch = doc['watch'] if 'watch' in doc else None
@@ -62,15 +62,19 @@ class Testly:
         return False
 
     def extract_templates(self, group):
-        inp = outp = None
+        inp = out = err = None
+
         if 'templates' in group:
             templates = group['templates']
+
             if 'output' in templates:
-                outp = templates['output']
+                out = templates['output']
             if 'input' in templates:
                 inp = templates['input']
+            if 'error' in templates:
+                err = templates['error']
 
-        return inp, outp
+        return inp, out, err
 
     def run(self):
         num_groups = len(self.groups)
@@ -92,8 +96,8 @@ class Testly:
 
             for j, test in enumerate(tests):
                 num_cases = len(test['cases'])
-                print '  Test %d of %d:' % (j + 1, num_tests)
-                print '  The program should %s.' % test['it_should']
+                print indent + 'Test %d of %d:' % (j + 1, num_tests)
+                print indent + 'The program should %s.' % test['it_should']
 
                 cases = (Case(case, k, templates) for k, case in enumerate(test['cases']))
 

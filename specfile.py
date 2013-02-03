@@ -71,4 +71,4 @@ class SpecFile:
         except ValueError as e:
             print 'Spec file is not a valid YAML document'
             print e
-            exit(2)
+            exit(1)

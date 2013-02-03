@@ -6,7 +6,7 @@ try:
     from watchdog.events import FileSystemEventHandler
 except ImportError:
     print 'Watchdog module not installed. File watch functionality disabled'
-    exit(7)
+    exit(1)
 
 
 # Override the base event handler class to run the tests when the files change
