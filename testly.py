@@ -14,33 +14,44 @@ def parse_args():
     # Add the argument for running the program in watch mode
     parser.add_argument('-w', '--watch', action='store_true',
         help='Monitor the source files for changes and run the tests each time')
+
+    parser.add_argument('task', nargs='?', default='run')
+
     return parser.parse_args()
 
 
 class Testly:
     def __init__(self):
         spec_file = specfile.SpecFile()
-        spec_file.read()
-        spec_file.parse()
-        doc = spec_file.doc
-
-        try:
-            self.command = doc['command']
-            self.groups = doc['groups']
-        except KeyError as e:
-            print 'Spec file is missing the %s property' % e
-            exit(3)
 
         args = parse_args()
 
-        if args.watch:
-            paths_to_watch = doc['watch'] if 'watch' in doc else None
-            observer = fileobserver.FileObserver(self.run, paths_to_watch)
-            observer.observe()
+        if args.task == 'init':
+            spec_file.create()
 
-        # Run the tests once if not in watch mode
+        elif args.task == 'run':
+            spec_file.read()
+            spec_file.parse()
+            doc = spec_file.doc
+
+            try:
+                self.command = doc['command']
+                self.groups = doc['groups']
+            except KeyError as e:
+                print 'Spec file is missing the %s property' % e
+                exit(3)
+
+            if args.watch:
+                paths_to_watch = doc['watch'] if 'watch' in doc else None
+                observer = fileobserver.FileObserver(self.run, paths_to_watch)
+                observer.observe()
+
+            # Run the tests once if not in watch mode
+            else:
+                self.run()
+
         else:
-            self.run()
+            print 'Unrecognised argument %s' % args.task
 
     def uses_templates(self):
         # Determine whether any templates are used in the test spec file

@@ -1,71 +1,71 @@
 command: ['phonebook']
 
 watch:
-  - path: ./src/
+- path: ./src/
 
-  - path: ./util/
-    recursive: false
+- path: ./util/
+  recursive: false
 
 groups:
-  - templates:
-      output: |
-        Do you want to print all entries? (y/n) 
-        {{ entries }}
-    tests:
-      - it_should: sort the entries into alphabetical order by name
-        cases:
-        - input: |
-            Tom 123
-            Bob 345
-            Jim 678
-            .
-            y
+- templates:
+    output: |
+      Do you want to print all entries? (y/n) 
+      {{ entries }}
+  tests:
+  - it_should: sort the entries into alphabetical order by name
+    cases:
+    - input: |
+        Tom 123
+        Bob 345
+        Jim 678
+        .
+        y
 
-          output:
-            entries: |-
-              Bob 345
-              Jim 678
-              Tom 123
+      output:
+        entries: |-
+          Bob 345
+          Jim 678
+          Tom 123
 
-      - it_should: perform a case-insensitive sort
-        cases:
-        - input: |
-            ZACH 123
-            aaron 456
-            Andy 789
-            .
-            y
+  - it_should: perform a case-insensitive sort
+    cases:
+    - input: |
+        ZACH 123
+        aaron 456
+        Andy 789
+        .
+        y
 
-          output:
-            entries: |-
-              aaron 456
-              Andy 789
-              ZACH 123
+      output:
+        entries: |-
+          aaron 456
+          Andy 789
+          ZACH 123
 
-  - templates:
-      output: |-
-        What name? {{ text }}
-    tests:
-      - it_should: allow the user to search for entries by name
-        cases:
-        - input: |
-            Tom 123
-            Bob 345
-            Jim 678
-            !
-            Tom
+- templates:
+    output: |-
+      What name? {{ text }}
+  tests:
+  - it_should: allow the user to search for entries by name
+    cases:
+    - input: |
+        Tom 123
+        Bob 345
+        Jim 678
+        !
+        Tom
 
-          output:
-            text: '123'
+      output:
+        text: '123'
 
-      - it_should: display a message if the user searches for a name that is not in the database
-        cases:
-        - input: |
-            Tim 123
-            Bob 456
-            !
-            Joe
+  - it_should: display a message if the user searches for a name that is not in the database
+    cases:
+    - input: |
+        Tim 123
+        Bob 456
+        !
+        Joe
 
-          output:
-            text:
-              "No match found\n"
+      output:
+        text:
+          "No match found\n"
