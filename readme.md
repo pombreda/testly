@@ -34,6 +34,9 @@ You can pass `-w` to the program and it will watch the source files of your prog
 
 ## Changelog
 
+### 0.3
+- Added init feature
+
 ### 0.2.3
 - Added support for testing error messages
 

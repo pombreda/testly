@@ -5,7 +5,7 @@ from setuptools import setup
 
 setup(
     name='Testly',
-    version='0.2.3',
+    version='0.3',
     url='https://github.com/lavelle/testly',
 
     author='Giles Lavelle',
